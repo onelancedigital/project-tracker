@@ -1,10 +1,17 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from './config';
-import allowedEmailsData from '../../config/allowedEmails.json';
+import { JWT_SECRET, ALLOWED_EMAILS } from './config';
 
-const allowedEmails = allowedEmailsData.allowedEmails;
+let allowedEmailsCache: string[] | null = null;
+
+function getAllowedEmails(): string[] {
+  if (!allowedEmailsCache) {
+    allowedEmailsCache = ALLOWED_EMAILS.split(',').map(email => email.trim().toLowerCase());
+  }
+  return allowedEmailsCache;
+}
 
 export function isEmailAllowed(email) {
+  const allowedEmails = getAllowedEmails();
   return allowedEmails.includes(email.toLowerCase());
 }
 

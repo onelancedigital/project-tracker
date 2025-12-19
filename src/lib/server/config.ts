@@ -6,3 +6,4 @@ export const RESEND_API_KEY = env.RESEND_API_KEY || '';
 export const RESEND_FROM_EMAIL = env.RESEND_FROM_EMAIL || 'no-reply@onelance.ch';
 export const JWT_SECRET = env.JWT_SECRET || 'your-secret-key-change-this';
 export const APP_URL = env.APP_URL || 'http://localhost:5173';
+export const ALLOWED_EMAILS = env.ALLOWED_EMAILS || 'guillaume@onelance.ch';
