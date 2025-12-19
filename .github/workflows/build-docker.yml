@@ -1,20 +1,96 @@
-name: Build and publish
+# GitHub Actions Workflow pour Hofstetter Automation
+# Build et push automatique de l'image Docker sur chaque commit de la branche dev
 
-on: 
+name: Build and Push Docker Image
+
+on:
   push:
-    tags:
-    - "*" # Running this workflow only when a tag is made
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: onelancedigital/project-tracker
 
 jobs:
-  build-and-publish-latest:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-    - uses: actions/checkout@v2.5.0 # Checking out the repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Build and publish "latest" Docker image
-      uses: VaultVulp/gp-docker-action@1.6.0
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }} # Provide GITHUB_TOKEN to login into the GitHub Packages
-        image-name: docker # Provide only Docker image name, tag will be automatically set to latest
-        extract-git-tag: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-{{date 'YYYYMMDD-HHmmss'}}-
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Image digest
+        run: echo ${{ steps.build-and-push.outputs.digest }}
+
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: success()
+    
+    steps:
+      - name: Notify success
+        run: |
+          echo "✅ Image Docker construite et publiée avec succès!"
+          echo "📦 Registry: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "🔖 Branch: ${GITHUB_REF#refs/heads/}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo ""
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "🏷️  Tag: ${GITHUB_REF#refs/tags/}"
+            echo "🔄 Flux détectera et déploiera automatiquement dans 5-30 minutes"
+            echo ""
+            echo "Surveiller le déploiement avec:"
+            echo "  kubectl get imagerepository hofstetter-automation-registry -n hofstetter-automation"
+            echo "  kubectl get imagepolicy hofstetter-automation-policy -n hofstetter-automation"
+          else
+            echo "📋 Environnement: Development"
+            echo "🚀 L'image est disponible pour déploiement manuel"
+          fi
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: failure()
+    
+    steps:
+      - name: Notify failure
+        run: |
+          echo "❌ Échec de la construction de l'image Docker"
+          echo "🔍 Vérifiez les logs ci-dessus pour plus de détails"
+          echo "📝 Commit: ${{ github.sha }}"
