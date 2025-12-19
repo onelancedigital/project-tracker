@@ -1,15 +1,17 @@
 import { Resend } from 'resend';
 import { RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL } from './config';
 
-// Validation de la clé API
-if (!RESEND_API_KEY || RESEND_API_KEY === '') {
-  console.error('❌ RESEND_API_KEY non configurée dans le fichier .env');
-  console.error('👉 Obtenez votre clé sur https://resend.com/api-keys');
+let resendCache: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendCache) {
+    resendCache = new Resend(RESEND_API_KEY);
+  }
+  return resendCache;
 }
 
-const resend = new Resend(RESEND_API_KEY);
-
 export async function sendMagicLink(email, token) {
+  const resend = getResend();
   const magicLink = `${APP_URL}/auth/verify?token=${token}`;
 
   try {
