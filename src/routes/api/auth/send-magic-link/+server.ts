@@ -2,6 +2,8 @@ import { json } from '@sveltejs/kit';
 import { isEmailAllowed, generateMagicLink } from '$lib/server/auth';
 import { sendMagicLink } from '$lib/server/email';
 
+export const prerender = false;
+
 export async function POST({ request }) {
   try {
     const { email } = await request.json();
