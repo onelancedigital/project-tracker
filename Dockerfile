@@ -20,6 +20,7 @@ COPY --from=build /app/build ./build
 
 # Installer les dépendances de production (déjà incluses dans le build de adapter-node)
 # Note: adapter-node inclut node_modules dans le build
+COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 3000
 
