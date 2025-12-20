@@ -42,6 +42,16 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix={{branch}}-{{date 'YYYYMMDD-HHmmss'}}-
 
+      - name: Generate version tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="${GITHUB_REF#refs/heads/}-$(date +'%Y%m%d-%H%M%S')-${GITHUB_SHA::7}"
+          fi
+          echo "tag=${VERSION}" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v5
@@ -54,6 +64,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          build-args: |
+            DOCKER_TAG=${{ steps.version.outputs.tag }}
 
       - name: Image digest
         run: echo ${{ steps.build-and-push.outputs.digest }}

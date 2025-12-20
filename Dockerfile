@@ -2,6 +2,9 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Argument pour le tag Docker
+ARG DOCKER_TAG=unknown
+
 # Copier les fichiers de package et installer les dépendances
 COPY package*.json ./
 RUN npm install
@@ -14,6 +17,10 @@ RUN npm run build
 FROM node:20-alpine AS production
 
 WORKDIR /app
+
+# Variable d'environnement pour le tag
+ARG DOCKER_TAG=unknown
+ENV DOCKER_TAG=${DOCKER_TAG}
 
 # Copier uniquement les fichiers nécessaires pour exécuter l'application
 COPY --from=build /app/build ./build

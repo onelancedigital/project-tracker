@@ -1,7 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import { verifyAuthToken, generateAuthToken } from '$lib/server/auth';
+import type { RequestHandler } from './$types';
 
-export async function load({ url, cookies }) {
+export const GET: RequestHandler = async ({ url, cookies }) => {
   const token = url.searchParams.get('token');
 
   if (!token) {
@@ -27,4 +28,4 @@ export async function load({ url, cookies }) {
   });
 
   throw redirect(302, '/');
-}
+};
