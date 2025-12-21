@@ -13,7 +13,7 @@ export async function POST({ request }) {
     }
 
     if (!isEmailAllowed(email)) {
-      return json({ error: 'Email non autorisé' }, { status: 403 });
+      return json({ error: 'Une erreur est survenue' }, { status: 403 });
     }
 
     const token = generateMagicLink(email);
