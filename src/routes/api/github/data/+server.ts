@@ -118,15 +118,44 @@ export async function GET({ locals }) {
 
     // Transform GraphQL data to match REST API format
     const issues = graphqlData.data.repository.issues.nodes.map(issue => {
-      // Extract project status
+      // Extract project status and issue type from ProjectV2 fields (robust search)
       let projectStatus = null;
+      let projectIssueType = null;
       if (issue.projectItems?.nodes?.length > 0) {
-        const projectItem = issue.projectItems.nodes[0];
-        const statusField = projectItem.fieldValues?.nodes?.find(
-          field => field.field?.name === 'Status'
-        );
-        if (statusField) {
-          projectStatus = statusField.name;
+        // Iterate over all project items and their fieldValues to find Status and any 'type' field
+        for (const projectItem of issue.projectItems.nodes) {
+          const fields = projectItem.fieldValues?.nodes || [];
+
+          // Look for Status
+          if (!projectStatus) {
+            const statusField = fields.find(f => f.field?.name === 'Status');
+            if (statusField) projectStatus = statusField.name;
+          }
+
+          // Look for a field that looks like an issue type (case-insensitive contains 'type' or exact 'Issue type')
+          if (!projectIssueType) {
+            const typeField = fields.find(f => {
+              const fname = f.field?.name || '';
+              return fname.toLowerCase() === 'issue type' || fname.toLowerCase() === 'issue type' || fname.toLowerCase().includes('type');
+            });
+            if (typeField) projectIssueType = typeField.name;
+          }
+
+          if (projectStatus && projectIssueType) break;
+        }
+      }
+
+      // If no issue_type found, fallback to first label if available
+      if (!projectIssueType) {
+        projectIssueType = issue.labels?.nodes && issue.labels.nodes.length > 0 ? issue.labels.nodes[0].name : null;
+      }
+
+      // Log projectItems for debugging in development when we had to fallback
+      if (!projectIssueType && process.env.NODE_ENV !== 'production') {
+        try {
+          console.info(`No issue_type for issue #${issue.number}. projectItems:`, JSON.stringify(issue.projectItems, null, 2));
+        } catch (logErr) {
+          console.info(`No issue_type for issue #${issue.number}. (failed to stringify projectItems)`);
         }
       }
 
@@ -150,13 +179,81 @@ export async function GET({ locals }) {
         milestone: issue.milestone,
         comments: issue.comments.totalCount,
         user: issue.author ? { login: issue.author.login } : null,
-        project_status: projectStatus // Nouveau champ avec le statut du projet
+        project_status: projectStatus,
+        issue_type: projectIssueType
       };
     });
 
+    // Fetch sub-issues for each issue using the dedicated API
+    const issuesWithSubIssues = await Promise.all(
+      issues.map(async (issue) => {
+        try {
+          const subIssuesResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPO}/issues/${issue.number}/sub_issues`,
+            {
+              headers: {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': `Bearer ${GITHUB_PAT}`,
+                'X-GitHub-Api-Version': '2022-11-28',
+                'User-Agent': 'SvelteKit-Project-Tracker'
+              }
+            }
+          );
+
+          let subIssues = [];
+          if (subIssuesResponse.ok) {
+            const subIssuesData = await subIssuesResponse.json();
+            subIssues = subIssuesData.map(si => ({
+              number: si.number,
+              title: si.title,
+              state: si.state,
+              html_url: si.html_url,
+              assignees: si.assignees.map(a => ({
+                login: a.login,
+                avatar_url: a.avatar_url
+              })),
+              labels: si.labels.map(l => ({
+                name: l.name,
+                color: l.color
+              }))
+            }));
+          }
+
+          return {
+            ...issue,
+            sub_issues: subIssues,
+            sub_issues_stats: {
+              total: subIssues.length,
+              completed: subIssues.filter(si => si.state === 'closed').length
+            }
+          };
+        } catch (error) {
+          console.error(`Error fetching sub-issues for issue #${issue.number}:`, error);
+          return {
+            ...issue,
+            sub_issues: [],
+            sub_issues_stats: { total: 0, completed: 0 }
+          };
+        }
+      })
+    );
+
+    // Create a set of sub-issue numbers for filtering
+    const subIssueNumbers = new Set();
+    issuesWithSubIssues.forEach(issue => {
+      issue.sub_issues.forEach(si => subIssueNumbers.add(si.number));
+    });
+
+    // Mark issues that are sub-issues
+    const enrichedIssues = issuesWithSubIssues.map(issue => ({
+      ...issue,
+      is_sub_issue: subIssueNumbers.has(issue.number),
+      parent_issue_number: null // Could be enhanced by finding parent from subIssues arrays
+    }));
+
     return json({
       milestones,
-      issues
+      issues: enrichedIssues
     });
   } catch (error) {
     console.error('GitHub API error:', error);
