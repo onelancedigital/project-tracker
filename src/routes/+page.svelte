@@ -974,10 +974,7 @@
                 <div class="space-y-2">
                   {#each modalIssue.sub_issues as subIssue}
                     {@const isCompleted = subIssue.state === 'closed'}
-                    <a 
-                      href={subIssue.html_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <div 
                       class="flex items-start space-x-2 p-3 bg-white rounded border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
                     >
                       <div class="flex-shrink-0 mt-0.5">
@@ -1013,7 +1010,7 @@
                           </div>
                         {/if}
                       </div>
-                    </a>
+                    </div>
                   {/each}
                 </div>
               </div>
