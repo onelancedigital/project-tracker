@@ -9,11 +9,11 @@ export async function POST({ request }) {
     const { email } = await request.json();
 
     if (!email) {
-      return json({ error: 'Email requis' }, { status: 400 });
+      return json({ error: 'Email is required' }, { status: 400 });
     }
 
     if (!isEmailAllowed(email)) {
-      return json({ error: 'Une erreur est survenue' }, { status: 403 });
+      return json({ error: 'An error occurred' }, { status: 403 });
     }
 
     const token = generateMagicLink(email);
@@ -24,11 +24,10 @@ export async function POST({ request }) {
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
       
-      // Fournir un message d'erreur plus spécifique
-      let errorMessage = 'Erreur lors de l\'envoi de l\'email';
+      // Provide a more specific error message
+      let errorMessage = 'Error sending email';
       
       if (emailError.message) {
-        // Si c'est une erreur de Resend, utiliser le message d'erreur
         errorMessage = emailError.message;
       }
       
@@ -39,6 +38,6 @@ export async function POST({ request }) {
     }
   } catch (error) {
     console.error('Error in magic link endpoint:', error);
-    return json({ error: 'Erreur lors du traitement de la demande' }, { status: 500 });
+    return json({ error: 'Error processing request' }, { status: 500 });
   }
 }

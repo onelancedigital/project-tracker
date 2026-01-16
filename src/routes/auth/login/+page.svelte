@@ -20,7 +20,7 @@
       const result = await response.json();
       
       if (!response.ok) {
-        throw new Error(result.error || 'Erreur lors de l\'envoi');
+        throw new Error(result.error || 'Error sending link');
       }
       
       sent = true;
@@ -41,22 +41,22 @@
         </div>
       </div>
       
-      <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">Connexion</h1>
+      <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">Sign In</h1>
       <p class="text-center text-gray-600 mb-6">
-        Entrez votre email pour recevoir un lien de connexion
+        Enter your email to receive a login link
       </p>
 
       <form on:submit|preventDefault={handleSubmit} class="space-y-4">
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-            Adresse email
+            Email address
           </label>
           <input
             id="email"
             type="email"
             bind:value={email}
             required
-            placeholder="votre@email.com"
+            placeholder="your@email.com"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
@@ -74,10 +74,10 @@
         >
           {#if loading}
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Envoi en cours...</span>
+            <span>Sending...</span>
           {:else}
             <Send class="w-5 h-5" />
-            <span>Envoyer le lien</span>
+            <span>Send link</span>
           {/if}
         </button>
       </form>
@@ -89,12 +89,12 @@
           </div>
         </div>
         
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Email envoyé !</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Email sent!</h1>
         <p class="text-gray-600 mb-4">
-          Consultez votre boîte mail <strong>{email}</strong> et cliquez sur le lien pour vous connecter.
+          Check your inbox at <strong>{email}</strong> and click the link to sign in.
         </p>
         <p class="text-sm text-gray-500">
-          Le lien est valide pendant 15 minutes.
+          The link is valid for 15 minutes.
         </p>
       </div>
     {/if}

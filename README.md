@@ -171,4 +171,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 If you encounter any issues or have questions, please file an issue on GitHub.
 
-Vibecoded with ❤️ by onelance digital.
+**Vibecoded with ❤️ by onelance digital.**

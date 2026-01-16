@@ -3,7 +3,7 @@ import { GITHUB_PAT, GITHUB_REPO } from '$lib/server/config';
 
 export async function GET({ locals }) {
   if (!locals.user) {
-    return json({ error: 'Non authentifié' }, { status: 401 });
+    return json({ error: 'Not authenticated' }, { status: 401 });
   }
 
   try {
@@ -30,7 +30,7 @@ export async function GET({ locals }) {
         repo: GITHUB_REPO,
         url: `https://api.github.com/repos/${GITHUB_REPO}/milestones?state=all`
       });
-      throw new Error(`Erreur lors de la récupération des milestones: ${milestonesResponse.status} - ${errorBody}`);
+      throw new Error(`Error fetching milestones: ${milestonesResponse.status} - ${errorBody}`);
     }
 
     const milestones = await milestonesResponse.json();
@@ -106,14 +106,14 @@ export async function GET({ locals }) {
     });
 
     if (!graphqlResponse.ok) {
-      throw new Error('Erreur lors de la récupération des issues');
+      throw new Error('Error fetching issues');
     }
 
     const graphqlData = await graphqlResponse.json();
     
     if (graphqlData.errors) {
       console.error('GraphQL errors:', graphqlData.errors);
-      throw new Error('Erreur GraphQL: ' + JSON.stringify(graphqlData.errors));
+      throw new Error('GraphQL error: ' + JSON.stringify(graphqlData.errors));
     }
 
     // Transform GraphQL data to match REST API format

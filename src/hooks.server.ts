@@ -5,8 +5,8 @@ export async function handle({ event, resolve }) {
 
   if (token) {
     const payload = verifyAuthToken(token);
-    if (payload) {
-      event.locals.user = { email: payload.email };
+    if (payload && typeof payload !== 'string') {
+      event.locals.user = { email: payload.email as string };
     }
   }
 

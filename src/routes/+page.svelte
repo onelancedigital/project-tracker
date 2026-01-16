@@ -33,7 +33,7 @@
       milestones = result.milestones;
       issues = result.issues;
 
-      // Si on est en mode actions, charger les événements
+      // If in actions mode, load events
       if (viewMode === 'actions') {
         await fetchEvents();
       }
@@ -89,14 +89,14 @@
 
   function handleIssueClick(issue) {
     if (viewMode === 'kanban') {
-      // En mode kanban, ouvrir le modal
+      // In kanban mode, open modal
       modalIssue = issue;
       showModal = true;
       if (issue.comments > 0) {
         fetchIssueComments(issue.number);
       }
     } else {
-      // En mode liste, toggle l'expansion
+      // In list mode, toggle expansion
       selectedIssue = selectedIssue === issue.number ? null : issue.number;
       if (selectedIssue && issue.comments > 0) {
         fetchIssueComments(issue.number);
@@ -110,40 +110,40 @@
   }
 
   function getIssueStatus(issue) {
-    // Priorité 1: Utiliser le statut du projet GitHub si disponible
+    // Priority 1: Use GitHub project status if available
     if (issue.project_status) {
       const status = issue.project_status.toLowerCase();
       
-      // Mapper les statuts du projet aux colonnes du kanban
-      // Terminé (Done)
+      // Map project statuses to kanban columns
+      // Done
       if (status === 'done') {
         return 'done';
       }
       
-      // En cours (In progress + In review)
+      // In progress (In progress + In review)
       if (status === 'in progress' || status === 'in review') {
         return 'in-progress';
       }
       
-      // À faire (Backlog + Ready)
+      // To do (Backlog + Ready)
       if (status === 'backlog' || status === 'ready') {
         return 'todo';
       }
       
-      // Si le statut n'est pas reconnu, utiliser un fallback intelligent
+      // If status is not recognized, use smart fallback
       return 'todo';
     }
     
-    // Priorité 2: Fallback sur l'état de l'issue
+    // Priority 2: Fallback on issue state
     if (issue.state === 'closed') return 'done';
     
-    // Priorité 3: Fallback sur les labels
+    // Priority 3: Fallback on labels
     const labelNames = issue.labels ? issue.labels.map(l => l.name.toLowerCase()) : [];
     if (labelNames.includes('in-progress') || labelNames.includes('in progress') || labelNames.includes('in-review')) {
       return 'in-progress';
     }
     
-    // Par défaut: todo
+    // Default: todo
     return 'todo';
   }
 
@@ -196,7 +196,7 @@
     ? issues 
     : issues.filter(issue => issue.milestone && issue.milestone.title === selectedMilestone);
 
-  // Filtrer les sub-issues pour les vues kanban (ne garder que les issues principales)
+  // Filter sub-issues for kanban views (keep only main issues)
   $: mainIssues = filteredIssues.filter(issue => !issue.is_sub_issue);
 
   $: todoIssues = mainIssues.filter(issue => getIssueStatus(issue) === 'todo');
@@ -208,7 +208,7 @@
   <div class="min-h-screen bg-gray-50 flex items-center justify-center">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-      <p class="text-gray-600">Chargement des données...</p>
+      <p class="text-gray-600">Loading data...</p>
     </div>
   </div>
 {:else if error}
@@ -216,7 +216,7 @@
     <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
       <div class="flex items-center space-x-3 text-red-700 mb-2">
         <AlertCircle class="w-6 h-6" />
-        <h2 class="font-semibold">Erreur</h2>
+        <h2 class="font-semibold">Error</h2>
       </div>
       <p class="text-red-600 text-sm">{error}</p>
     </div>
@@ -229,7 +229,7 @@
           <div class="flex items-center space-x-2 sm:space-x-3">
             <GitBranch class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
             <div>
-              <h1 class="text-base sm:text-xl font-bold text-gray-900">Suivi du projet WEFAM</h1>
+              <h1 class="text-base sm:text-xl font-bold text-gray-900">GitHub Project Tracker</h1>
               <p class="text-xs sm:text-sm text-gray-500 hidden sm:block">{data.user.email}</p>
             </div>
           </div>
@@ -262,7 +262,7 @@
               class="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 px-2 sm:px-3 py-2 rounded-lg hover:bg-gray-100"
             >
               <LogOut class="w-4 h-4" />
-              <span class="hidden sm:inline">Déconnexion</span>
+              <span class="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
@@ -272,10 +272,10 @@
     <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <!-- Milestones -->
       <section class="mb-6 sm:mb-8">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Jalons</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Milestones</h2>
         {#if milestones.length === 0}
           <div class="bg-white rounded-lg shadow p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base">
-            Aucun milestone configuré
+            No milestones configured
           </div>
         {:else}
           <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
@@ -317,7 +317,7 @@
           bind:value={selectedMilestone}
           class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         >
-          <option value="all">Tous les jalons ({issues.length})</option>
+          <option value="all">All milestones ({issues.length})</option>
           {#each milestones as m}
             <option value={m.title}>
               {m.title} ({issues.filter(i => i.milestone && i.milestone.title === m.title).length})
@@ -330,12 +330,12 @@
         <!-- Kanban View -->
         <!-- Mobile: Colonnes empilées verticalement -->
         <div class="sm:hidden space-y-4">
-            <!-- À faire Mobile -->
+            <!-- To Do Mobile -->
             <div class="flex flex-col">
               <div class="bg-gray-200 rounded-t-lg px-3 py-2 flex items-center justify-between">
                 <h3 class="font-bold text-gray-900 flex items-center text-xs">
                   <Circle class="w-3 h-3 mr-1 text-gray-500" />
-                  À faire
+                  To Do
                 </h3>
                 <span class="bg-gray-300 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
                   {todoIssues.length}
@@ -343,7 +343,7 @@
               </div>
               <div class="bg-gray-100 rounded-b-lg p-2 space-y-2 flex-1 overflow-y-auto">
                 {#if todoIssues.length === 0}
-                  <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                  <p class="text-sm text-gray-500 text-center py-4">No issues</p>
                 {:else}
                   {#each todoIssues as issue}
                     <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3" on:click={() => handleIssueClick(issue)}>
@@ -360,7 +360,7 @@
                       {#if issue.comments > 0}
                         <div class="flex items-center text-xs text-gray-600 mb-2">
                           <MessageSquare class="w-3 h-3 mr-1" />
-                          {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                          {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                         </div>
                       {/if}
                       {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -389,12 +389,12 @@
               </div>
             </div>
 
-            <!-- En cours Mobile -->
+            <!-- In Progress Mobile -->
             <div class="flex flex-col">
               <div class="bg-blue-200 rounded-t-lg px-3 py-2 flex items-center justify-between">
                 <h3 class="font-bold text-gray-900 flex items-center text-xs">
                   <Clock class="w-3 h-3 mr-1 text-blue-600" />
-                  En cours
+                  In Progress
                 </h3>
                 <span class="bg-blue-300 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
                   {inProgressIssues.length}
@@ -402,7 +402,7 @@
               </div>
               <div class="bg-blue-50 rounded-b-lg p-2 space-y-2 flex-1 overflow-y-auto">
                 {#if inProgressIssues.length === 0}
-                  <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                  <p class="text-sm text-gray-500 text-center py-4">No issues</p>
                 {:else}
                   {#each inProgressIssues as issue}
                     <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3 border-l-4 border-blue-500" on:click={() => handleIssueClick(issue)}>
@@ -419,7 +419,7 @@
                       {#if issue.comments > 0}
                         <div class="flex items-center text-xs text-gray-600 mb-2">
                           <MessageSquare class="w-3 h-3 mr-1" />
-                          {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                          {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                         </div>
                       {/if}
                       {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -448,12 +448,12 @@
               </div>
             </div>
 
-            <!-- Terminé Mobile -->
+            <!-- Done Mobile -->
             <div class="flex flex-col">
               <div class="bg-green-200 rounded-t-lg px-3 py-2 flex items-center justify-between">
                 <h3 class="font-bold text-gray-900 flex items-center text-xs">
                   <CheckCircle class="w-3 h-3 mr-1 text-green-600" />
-                  Terminé
+                  Done
                 </h3>
                 <span class="bg-green-300 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
                   {doneIssues.length}
@@ -461,7 +461,7 @@
               </div>
               <div class="bg-green-50 rounded-b-lg p-2 space-y-2 flex-1 overflow-y-auto">
                 {#if doneIssues.length === 0}
-                  <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                  <p class="text-sm text-gray-500 text-center py-4">No issues</p>
                 {:else}
                   {#each doneIssues as issue}
                     <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3 opacity-75" on:click={() => handleIssueClick(issue)}>
@@ -478,7 +478,7 @@
                       {#if issue.comments > 0}
                         <div class="flex items-center text-xs text-gray-600 mb-2">
                           <MessageSquare class="w-3 h-3 mr-1" />
-                          {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                          {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                         </div>
                       {/if}
                       {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -503,14 +503,14 @@
             </div>
         </div>
 
-        <!-- Desktop: Grille 3 colonnes -->
+        <!-- Desktop: 3 column grid -->
         <div class="hidden sm:grid sm:grid-cols-3 gap-4">
-          <!-- À faire Desktop -->
+          <!-- To Do Desktop -->
           <div class="flex flex-col">
             <div class="bg-gray-200 rounded-t-lg px-4 py-3 flex items-center justify-between">
               <h3 class="font-bold text-gray-900 flex items-center text-sm">
                 <Circle class="w-4 h-4 mr-2 text-gray-500" />
-                À faire
+                To Do
               </h3>
               <span class="bg-gray-300 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
                 {todoIssues.length}
@@ -518,7 +518,7 @@
             </div>
             <div class="bg-gray-100 rounded-b-lg p-3 space-y-3 flex-1 overflow-y-auto" style="max-height: 800px;">
               {#if todoIssues.length === 0}
-                <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                <p class="text-sm text-gray-500 text-center py-4">No issues</p>
               {:else}
                 {#each todoIssues as issue}
                   <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3" on:click={() => handleIssueClick(issue)}>
@@ -535,7 +535,7 @@
                     {#if issue.comments > 0}
                       <div class="flex items-center text-xs text-gray-600 mb-2">
                         <MessageSquare class="w-3 h-3 mr-1" />
-                        {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                        {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                       </div>
                     {/if}
                     {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -564,12 +564,12 @@
             </div>
           </div>
 
-          <!-- En cours Desktop -->
+          <!-- In Progress Desktop -->
           <div class="flex flex-col">
             <div class="bg-blue-200 rounded-t-lg px-4 py-3 flex items-center justify-between">
               <h3 class="font-bold text-gray-900 flex items-center text-sm">
                 <Clock class="w-4 h-4 mr-2 text-blue-600" />
-                En cours
+                In Progress
               </h3>
               <span class="bg-blue-300 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
                 {inProgressIssues.length}
@@ -577,7 +577,7 @@
             </div>
             <div class="bg-blue-50 rounded-b-lg p-3 space-y-3 flex-1 overflow-y-auto" style="max-height: 800px;">
               {#if inProgressIssues.length === 0}
-                <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                <p class="text-sm text-gray-500 text-center py-4">No issues</p>
               {:else}
                 {#each inProgressIssues as issue}
                   <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3 border-l-4 border-blue-500" on:click={() => handleIssueClick(issue)}>
@@ -594,7 +594,7 @@
                     {#if issue.comments > 0}
                       <div class="flex items-center text-xs text-gray-600 mb-2">
                         <MessageSquare class="w-3 h-3 mr-1" />
-                        {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                        {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                       </div>
                     {/if}
                     {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -623,12 +623,12 @@
             </div>
           </div>
 
-          <!-- Terminé Desktop -->
+          <!-- Done Desktop -->
           <div class="flex flex-col">
             <div class="bg-green-200 rounded-t-lg px-4 py-3 flex items-center justify-between">
               <h3 class="font-bold text-gray-900 flex items-center text-sm">
                 <CheckCircle class="w-4 h-4 mr-2 text-green-600" />
-                Terminé
+                Done
               </h3>
               <span class="bg-green-300 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
                 {doneIssues.length}
@@ -636,7 +636,7 @@
             </div>
             <div class="bg-green-50 rounded-b-lg p-3 space-y-3 flex-1 overflow-y-auto" style="max-height: 800px;">
               {#if doneIssues.length === 0}
-                <p class="text-sm text-gray-500 text-center py-4">Aucune issue</p>
+                <p class="text-sm text-gray-500 text-center py-4">No issues</p>
               {:else}
                 {#each doneIssues as issue}
                   <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer p-3 opacity-75" on:click={() => handleIssueClick(issue)}>
@@ -653,7 +653,7 @@
                     {#if issue.comments > 0}
                       <div class="flex items-center text-xs text-gray-600 mb-2">
                         <MessageSquare class="w-3 h-3 mr-1" />
-                        {issue.comments} commentaire{issue.comments > 1 ? 's' : ''}
+                        {issue.comments} comment{issue.comments > 1 ? 's' : ''}
                       </div>
                     {/if}
                     {#if issue.sub_issues_stats && issue.sub_issues_stats.total > 0}
@@ -742,10 +742,10 @@
                     <div>
                       <h4 class="font-semibold text-gray-900 mb-3 flex items-center text-sm">
                         <MessageSquare class="w-4 h-4 mr-2" />
-                        Commentaires
+                        Comments
                       </h4>
                       {#if loadingComments[issue.number]}
-                        <div class="text-center py-4 text-gray-500 text-sm">Chargement...</div>
+                        <div class="text-center py-4 text-gray-500 text-sm">Loading...</div>
                       {:else if comments.length > 0}
                         <div class="space-y-3">
                           {#each comments as comment}
@@ -759,7 +759,7 @@
                           {/each}
                         </div>
                       {:else}
-                        <p class="text-sm text-gray-500">Aucun commentaire</p>
+                        <p class="text-sm text-gray-500">No comments</p>
                       {/if}
                     </div>
                   {/if}
@@ -775,14 +775,14 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h2 class="text-lg sm:text-xl font-bold text-gray-900 flex items-center">
                 <Activity class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" />
-                Flux d'activité
+                Activity Feed
               </h2>
               <button
                 on:click={fetchEvents}
                 class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs sm:text-sm font-medium"
                 disabled={loadingEvents}
               >
-                {loadingEvents ? 'Actualisation...' : 'Actualiser'}
+                {loadingEvents ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
           </div>
@@ -791,14 +791,14 @@
               <div class="flex items-center justify-center py-12">
                 <div class="text-center">
                   <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p class="text-gray-600">Chargement des événements...</p>
+                  <p class="text-gray-600">Loading events...</p>
                 </div>
               </div>
             {:else if events.length === 0}
               <div class="text-center py-12">
                 <Activity class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p class="text-gray-500 text-lg font-medium mb-2">Aucun événement</p>
-                <p class="text-gray-400 text-sm">Les événements récents apparaîtront ici</p>
+                <p class="text-gray-500 text-lg font-medium mb-2">No events</p>
+                <p class="text-gray-400 text-sm">Recent events will appear here</p>
               </div>
             {:else}
               <div class="relative">
@@ -881,7 +881,7 @@
   </div>
 {/if}
 
-<!-- Modal pour les détails de l'issue - EN DEHORS du bloc principal -->
+<!-- Modal for issue details - OUTSIDE the main block -->
 {#if showModal && modalIssue}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -1030,7 +1030,7 @@
             </div>
           {:else}
             <div class="mb-6">
-              <p class="text-sm text-gray-500 italic">Aucune description</p>
+              <p class="text-sm text-gray-500 italic">No description</p>
             </div>
           {/if}
 
@@ -1040,7 +1040,7 @@
               <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                 <span class="w-1 h-4 bg-indigo-600 mr-2 rounded"></span>
                 <MessageSquare class="w-4 h-4 mr-2" />
-                Commentaires ({modalIssue.comments})
+                Comments ({modalIssue.comments})
               </h4>
               {#if loadingComments[modalIssue.number]}
                 <div class="flex items-center justify-center py-8">
@@ -1066,13 +1066,13 @@
                   {/each}
                 </div>
               {:else}
-                <p class="text-sm text-gray-500 py-4">Aucun commentaire disponible</p>
+                <p class="text-sm text-gray-500 py-4">No comments available</p>
               {/if}
             </div>
           {:else}
             <div class="text-center py-6">
               <MessageSquare class="w-12 h-12 text-gray-300 mx-auto mb-2" />
-              <p class="text-sm text-gray-500">Aucun commentaire</p>
+              <p class="text-sm text-gray-500">No comments</p>
             </div>
           {/if}
         </div>
@@ -1084,7 +1084,7 @@
             on:click={closeModal}
             class="w-full sm:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors text-sm font-medium"
           >
-            Fermer
+            Close
           </button>
         </div>
       </div>

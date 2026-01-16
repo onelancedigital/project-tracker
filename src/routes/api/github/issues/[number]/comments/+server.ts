@@ -24,7 +24,7 @@ export async function GET({ locals, params }) {
     );
 
     if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commentaires');
+      throw new Error('Error fetching comments');
     }
 
     const comments = await response.json();

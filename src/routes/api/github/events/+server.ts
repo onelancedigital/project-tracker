@@ -3,13 +3,13 @@ import { GITHUB_PAT, GITHUB_REPO } from '$lib/server/config';
 
 export async function GET({ locals }) {
   if (!locals.user) {
-    return json({ error: 'Non authentifié' }, { status: 401 });
+    return json({ error: 'Not authenticated' }, { status: 401 });
   }
 
   try {
     const [owner, repo] = GITHUB_REPO.split('/');
 
-    // Récupérer les événements du repository (issues, comments, commits, etc.)
+    // Fetch repository events (issues, comments, commits, etc.)
     const eventsResponse = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/events?per_page=100`,
       {
@@ -28,15 +28,15 @@ export async function GET({ locals }) {
         statusText: eventsResponse.statusText,
         body: errorBody
       });
-      throw new Error(`Erreur lors de la récupération des événements: ${eventsResponse.status}`);
+      throw new Error(`Error fetching events: ${eventsResponse.status}`);
     }
 
     const events = await eventsResponse.json();
 
-    // Filtrer et transformer les événements pour garder seulement ceux pertinents
+    // Filter and transform events to keep only relevant ones
     const relevantEvents = events
       .filter(event => {
-        // Garder seulement les types d'événements pertinents
+        // Keep only relevant event types
         return [
           'IssuesEvent',
           'IssueCommentEvent',
@@ -56,7 +56,7 @@ export async function GET({ locals }) {
           repo: event.repo.name
         };
 
-        // Ajouter des détails spécifiques selon le type d'événement
+        // Add specific details based on event type
         switch (event.type) {
           case 'IssuesEvent':
             return {
@@ -65,7 +65,7 @@ export async function GET({ locals }) {
               issue_number: event.payload.issue.number,
               issue_title: event.payload.issue.title,
               issue_state: event.payload.issue.state,
-              description: `${event.payload.action === 'opened' ? 'Ouvert' : event.payload.action === 'closed' ? 'Fermé' : 'Modifié'} l'issue #${event.payload.issue.number}: ${event.payload.issue.title}`
+              description: `${event.payload.action === 'opened' ? 'Opened' : event.payload.action === 'closed' ? 'Closed' : 'Modified'} issue #${event.payload.issue.number}: ${event.payload.issue.title}`
             };
 
           case 'IssueCommentEvent':
@@ -75,7 +75,7 @@ export async function GET({ locals }) {
               issue_number: event.payload.issue.number,
               issue_title: event.payload.issue.title,
               comment_body: event.payload.comment.body,
-              description: `Commenté sur l'issue #${event.payload.issue.number}: ${event.payload.issue.title}`
+              description: `Commented on issue #${event.payload.issue.number}: ${event.payload.issue.title}`
             };
 
           case 'PushEvent':
@@ -89,7 +89,7 @@ export async function GET({ locals }) {
                 sha: c.sha.substring(0, 7),
                 message: c.message
               })),
-              description: `Pushed ${commitCount} commit${commitCount > 1 ? 's' : ''} vers ${event.payload.ref}`
+              description: `Pushed ${commitCount} commit${commitCount > 1 ? 's' : ''} to ${event.payload.ref}`
             };
 
           case 'PullRequestEvent':
@@ -99,7 +99,7 @@ export async function GET({ locals }) {
               pr_number: event.payload.number,
               pr_title: event.payload.pull_request.title,
               pr_state: event.payload.pull_request.state,
-              description: `${event.payload.action === 'opened' ? 'Ouvert' : event.payload.action === 'closed' ? 'Fermé' : 'Modifié'} la PR #${event.payload.number}: ${event.payload.pull_request.title}`
+              description: `${event.payload.action === 'opened' ? 'Opened' : event.payload.action === 'closed' ? 'Closed' : 'Modified'} PR #${event.payload.number}: ${event.payload.pull_request.title}`
             };
 
           case 'PullRequestReviewEvent':
@@ -109,7 +109,7 @@ export async function GET({ locals }) {
               pr_number: event.payload.pull_request.number,
               pr_title: event.payload.pull_request.title,
               review_state: event.payload.review.state,
-              description: `Review ${event.payload.review.state} sur la PR #${event.payload.pull_request.number}`
+              description: `Review ${event.payload.review.state} on PR #${event.payload.pull_request.number}`
             };
 
           case 'PullRequestReviewCommentEvent':
@@ -119,7 +119,7 @@ export async function GET({ locals }) {
               pr_number: event.payload.pull_request.number,
               pr_title: event.payload.pull_request.title,
               comment_body: event.payload.comment.body,
-              description: `Commenté sur la PR #${event.payload.pull_request.number}`
+              description: `Commented on PR #${event.payload.pull_request.number}`
             };
 
           default:

@@ -11,14 +11,14 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
   const payload = verifyAuthToken(token);
 
-  if (!payload || payload.type !== 'magic-link') {
+  if (!payload || typeof payload === 'string' || payload.type !== 'magic-link') {
     throw redirect(302, '/auth/login');
   }
 
-  // Générer un token d'authentification de longue durée
-  const authToken = generateAuthToken(payload.email);
+  // Generate a long-lived authentication token
+  const authToken = generateAuthToken(payload.email as string);
   
-  // Définir le cookie
+  // Set the cookie
   cookies.set('auth_token', authToken, {
     path: '/',
     httpOnly: true,
