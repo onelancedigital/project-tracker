@@ -1,193 +1,174 @@
-# WeFam Tracker - Suivi de Projet GitHub
+# GitHub Project Tracker
 
-Application SvelteKit pour suivre les milestones et issues GitHub avec authentification par magic link.
+A SvelteKit application for tracking GitHub milestones and issues with secure magic link authentication.
 
-## 🚀 Fonctionnalités
+## Features
 
-- ✨ **Authentification sécurisée** : Magic link envoyé par email
-- 📊 **Tableau Kanban** : Visualisation en colonnes (À faire, En cours, Terminé)
-- 📋 **Vue Liste** : Affichage détaillé des issues
-- 🎯 **Milestones** : Suivi de progression avec barres de progression
-- 💬 **Commentaires** : Affichage des commentaires d'issues
-- 🔒 **Accès restreint** : Liste blanche d'emails autorisés
+- **Secure Authentication**: Magic link sent via email
+- **Kanban Board**: Visual columns (To Do, In Progress, Done)
+- **List View**: Detailed issue display
+- **Milestones**: Progress tracking with progress bars
+- **Comments**: Display issue comments
+- **Restricted Access**: Email whitelist for authorized users
 
-## 📋 Prérequis
+## Prerequisites
 
-- Node.js 18+ 
-- Un compte GitHub avec accès au dépôt
-- Un compte Resend (gratuit) pour l'envoi d'emails
+- Node.js 18 or higher
+- A GitHub account with repository access
+- A Resend account (free tier available) for sending emails
 
-## ⚙️ Configuration
+## Installation
 
-### 1. Installer les dépendances
+1. Clone the repository:
+
+```bash
+git clone https://github.com/onelancedigital/project-tracker.git
+cd project-tracker
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Configurer les variables d'environnement
+## Configuration
 
-Créez un fichier `.env` à la racine du projet :
+### 1. Environment Variables
 
-```bash
-cp .env.example .env
-```
-
-Modifiez le fichier `.env` avec vos valeurs :
+Create a `.env` file at the root of the project:
 
 ```env
 # GitHub Configuration
-GITHUB_PAT=ghp_votreTokenPersonnel
-GITHUB_REPO=votre-username/votre-repo
+GITHUB_PAT=ghp_yourPersonalAccessToken
+GITHUB_REPO=owner/repository-name
 
-# Resend Configuration
-RESEND_API_KEY=re_votreClefAPI
+# Resend Configuration (for email sending)
+RESEND_API_KEY=re_yourAPIKey
 RESEND_FROM_EMAIL=onboarding@resend.dev
 
-# JWT Secret (générez une clé aléatoire forte)
-JWT_SECRET=votre-secret-jwt-super-securise
+# JWT Secret (generate a strong random key)
+JWT_SECRET=your-super-secure-jwt-secret
 
-# App URL
+# Allowed Emails (comma-separated list)
+ALLOWED_EMAILS=user1@example.com,user2@example.com
+
+# Application URL
 APP_URL=http://localhost:5173
 ```
 
-### 3. Obtenir un Personal Access Token GitHub
+### 2. GitHub Personal Access Token
 
-1. Allez sur GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Générez un nouveau token avec les permissions :
-   - `repo` (accès complet au dépôt)
-3. Copiez le token dans `GITHUB_PAT`
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token (classic)"
+3. Select the following scopes:
+   - `repo` (Full control of private repositories)
+4. Copy the generated token and paste it in the `GITHUB_PAT` environment variable
 
-### 4. Configurer SMTP (exemple avec Gmail)
+### 3. Resend Email Service
 
-Pour Gmail, vous dResend (envoi d'emails)
+1. Create a free account at [resend.com](https://resend.com)
+2. Navigate to [API Keys](https://resend.com/api-keys)
+3. Create a new API key
+4. Copy the key and paste it in the `RESEND_API_KEY` environment variable
+5. For testing, use `onboarding@resend.dev` as the `RESEND_FROM_EMAIL` value
 
-1. Créez un compte gratuit sur [resend.com](https://resend.com)
-2. Allez dans [API Keys](https://resend.com/api-keys)
-3. Créez une nouvelle clé API
-4. Copiez la clé dans `RESEND_API_KEY`
-5. Pour tester, utilisez `onboarding@resend.dev` dans `RESEND_FROM_EMAIL`
+### 4. Allowed Emails
 
-📖 **Guide détaillé** : Voir [RESEND_CONFIG.md](RESEND_CONFIG.md)
+Add authorized email addresses to the `ALLOWED_EMAILS` environment variable, separated by commas:
 
-Modifiez `src/config/allowedEmails.json` :
-
-```json
-{
-  "allowedEmails": [
-    "client@example.com",
-    "votre-email@example.com"
-  ]
-}
+```env
+ALLOWED_EMAILS=client@example.com,admin@example.com,team@example.com
 ```
 
-## 🏃 Lancement
+Only users with these email addresses will be able to authenticate and access the application.
 
-### Développement
+## Running the Application
+
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-Ouvrez [http://localhost:5173](http://localhost:5173)
+The application will be available at [http://localhost:5173](http://localhost:5173)
 
-### Production
+### Production Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## 📖 Utilisation
+## Deployment
 
-### 1. Connexion
+### Using Docker
 
-- Accédez à l'application
-- Entrez votre email (doit être dans la liste autorisée)
-- Cliquez sur "Envoyer le lien"
-- Consultez votre boîte mail et cliquez sur le lien de connexion
+A Dockerfile is provided for containerized deployment:
 
-### 2. Vue Kanban
+```bash
+# Build the Docker image
+docker build -t project-tracker .
 
-Les issues sont organisées en 3 colonnes selon leur statut :
-
-- **À faire** : Issues ouvertes sans label "in-progress"
-- **En cours** : Issues ouvertes avec label "in-progress" ou "in progress"
-- **Terminé** : Issues fermées
-
-Pour changer le statut d'une issue, ajoutez/retirez le label "in-progress" sur GitHub.
-
-### 3. Filtres
-
-- Filtrez les issues par milestone via le menu déroulant
-- Basculez entre vue Kanban et vue Liste
-
-### 4. Détails des issues
-
-Cliquez sur une issue pour voir :
-- La description complète
-- Les commentaires
-- Les labels
-- L'assigné
-
-## 🏗️ Structure du projet
-
-```
-src/
-├── config/
-│   └── allowedEmails.json          # Emails autorisés
-├── lib/
-│   └── server/
-│       ├── auth.js                 # Gestion authentification JWT
-│       ├── config.js               # Variables d'environnement
-│       └── email.js                # Envoi d'emails
-├── routes/
-│   ├── +page.svelte                # Page principale (Kanban/Liste)
-│   ├── +page.server.js             # Protection de la page
-│   ├── auth/
-│   │   ├── login/
-│   │   │   └── +page.svelte        # Page de connexion
-│   │   └── verify/
-│   │       └── +page.server.js     # Vérification magic link
-│   └── api/
-│       ├── auth/
-│       │   ├── send-magic-link/
-│       │   │   └── +server.js      # API envoi magic link
-│       │   └── logout/
-│       │       └── +server.js      # API déconnexion
-│       └── github/
-│           ├── data/
-│           │   └── +server.js      # API milestones + issues
-│           └── issues/[number]/comments/
-│               └── +server.js      # API commentaires
-└── hooks.server.js                 # Hook authentification global
+# Run the container
+docker run -p 3000:3000 --env-file .env project-tracker
 ```
 
-## 🔒 Sécurité
+### Environment Variables for Production
 
-- Les magic links expirent après 15 minutes
-- Les tokens d'authentification sont valides 30 jours
-- Les cookies sont httpOnly et secure en production
-- Seuls les emails de la whitelist peuvent se connecter
+Make sure to set all required environment variables in your production environment. Never commit the `.env` file to version control.
 
-## 🎨 Personnalisation
+## Project Structure
 
-### Modifier la durée des tokens
-
-Dans `src/lib/server/auth.js` :
-
-```javascript
-// Magic link : 15 minutes
-expiresIn: '15m'
-
-// Token d'authentification : 30 jours
-expiresIn: '30d'
+```
+project-tracker/
+├── src/
+│   ├── hooks.server.ts           # Authentication middleware
+│   ├── lib/
+│   │   └── server/
+│   │       ├── auth.ts            # JWT authentication logic
+│   │       ├── config.ts          # Environment configuration
+│   │       └── email.ts           # Email sending via Resend
+│   └── routes/
+│       ├── +page.svelte           # Main dashboard
+│       ├── api/
+│       │   ├── auth/              # Authentication endpoints
+│       │   └── github/            # GitHub API proxies
+│       └── auth/
+│           └── login/             # Login page
+├── .env                           # Environment variables (not in git)
+├── package.json
+└── README.md
 ```
 
-### Ajouter des statuts personnalisés
+## How It Works
 
-Modifiez la fonction `getIssueStatus` dans `src/routes/+page.svelte` pour reconnaître d'autres labels.
+1. **Authentication Flow**:
+   - User enters their email on the login page
+   - If the email is in the allowed list, a magic link is sent
+   - User clicks the link and gets authenticated with a JWT token
+   - Token is stored in a secure HTTP-only cookie
 
-## 📝 Licence
+2. **GitHub Integration**:
+   - The app fetches issues and milestones from your GitHub repository
+   - Issues are displayed in a Kanban board or list view
+   - Progress is tracked based on issue states and milestones
 
-MIT
+3. **Security**:
+   - Only whitelisted emails can access the application
+   - All GitHub API calls go through the server to keep the PAT secure
+   - JWT tokens have an expiration time
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+If you encounter any issues or have questions, please file an issue on GitHub.
+
+Vibecoded with ❤️ by onelance digital.
