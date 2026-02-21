@@ -116,12 +116,12 @@
       
       // Map project statuses to kanban columns
       // Done
-      if (status === 'done') {
+      if (status === 'done' || status === 'in review') {
         return 'done';
       }
       
       // In progress (In progress + In review)
-      if (status === 'in progress' || status === 'in review') {
+      if (status === 'in progress') {
         return 'in-progress';
       }
       
